@@ -1,0 +1,131 @@
+name: "LeNet"
+layer {
+  name: "data"
+  type: "Input" # 数据类型 来自LMDB
+  top: "data" # 输出数据
+  input_param { shape: {dim:1 dim:3 dim:224 dim:224 } } # 输出标签
+}
+
+layer {
+  name: "conv1"
+  type: "Convolution" # 卷积层
+  bottom: "data"
+  top: "conv1"
+  param {
+    lr_mult: 1 # 权重学习率系数 * base_lr
+  }
+  param {
+    lr_mult: 2 # 偏置学习率系数
+  }
+  convolution_param {
+    num_output: 20 # 卷积核个数
+    kernel_size: 5 # 卷积核尺寸
+    stride: 1 # 卷积核步长
+    weight_filler {
+      type: "xavier" # 权重值初始化
+    }
+    bias_filler {
+      type: "constant" # 偏置值初始化，默认为0
+    }
+  }
+}
+layer {
+  name: "pool1"
+  type: "Pooling" # 池化层
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX # 最大池化
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "conv2"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 50
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "ip1"
+  type: "InnerProduct" # 全连接层
+  bottom: "pool2"
+  top: "ip1"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 500 # 神经元个数
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "relu1"
+  type: "ReLU" # 激活函数relu
+  bottom: "ip1"
+  top: "ip1"
+}
+layer {
+  name: "ip2"
+  type: "InnerProduct" # 全连接层
+  bottom: "ip1"
+  top: "ip2"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  inner_product_param {
+    num_output: 55 # 神经元个数
+    weight_filler {
+      type: "xavier"
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+
+layer {
+  name: "prob"
+  type: "Softmax" # 损失函数
+  bottom: "ip2"
+  top: "prob"
+}

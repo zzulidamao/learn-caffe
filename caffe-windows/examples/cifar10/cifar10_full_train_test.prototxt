@@ -1,0 +1,226 @@
+name: "CIFAR10_full"
+layer {
+  name: "cifar" # 层名
+  type: "Data" # 层类型
+  top: "data" # 输出层：数据
+  top: "label" # 输出层：标签 
+  include {
+    phase: TRAIN # 训练阶段使用
+  }
+  transform_param {# 预处理层：归一化/255，减去均值，除以方差，裁剪，数据增强
+    # 三通道均值文件存储路径
+    mean_file: "I:/86/caffe-windows/examples/cifar10/mean.binaryproto"
+    #mean_file: "J:/WQZ22022/NN_DATA/DATA_SET/general-51/simple_data/TOTAL/train/labels/mean/mean.binaryproto"
+  }
+  data_param {
+    # 数据来源路径
+    source: "I:/86/caffe-windows/examples/cifar10/cifar10_train_lmdb"
+    #source: "J:/WQZ22022/NN_DATA/DATA_SET/general-51/simple_data/TOTAL/train/labels/LMDB"
+    batch_size: 32 # 一次送入网络进行训练的图像数量
+    backend: LMDB # 数据格式
+  }
+}
+layer {
+  name: "cifar"
+  type: "Data"
+  top: "data"
+  top: "label"
+  include {
+    phase: TEST # 测试阶段
+  }
+  transform_param {
+    mean_file: "I:/86/caffe-windows/examples/cifar10/mean.binaryproto"
+    #mean_file: "J:/WQZ22022/NN_DATA/DATA_SET/general-51/simple_data/TOTAL/train/labels/mean/mean.binaryproto"
+  }
+  data_param {
+    source: "I:/86/caffe-windows/examples/cifar10/cifar10_test_lmdb"
+    #source: "J:/WQZ22022/NN_DATA/DATA_SET/general-51/simple_data/TOTAL/val/labels/LMDB"
+    batch_size: 10
+    backend: LMDB
+  }
+}
+layer {
+  name: "conv1"
+  type: "Convolution" # 卷积层
+  bottom: "data" # 输入层
+  top: "conv1" # 输出层
+  param {
+    lr_mult: 1 # 当前层的权重学习率 = lr_mult*base_lr ，不更新参数设置为0
+  }
+  param {
+    lr_mult: 2 # 当前层的偏置项学习率，一般情况下偏置层的学习率是权重层学习率的2倍
+  }
+  convolution_param {
+    num_output: 32 # 卷积核个数
+    pad: 2 # 填充2
+    kernel_size: 5 # 卷积核大小 5*5*@
+    stride: 1 # 步长
+    weight_filler {
+      type: "gaussian" # 权重初始化方式
+      std: 0.0001
+    }
+    bias_filler {
+      type: "constant" # 默认偏置初始化方式，值为0
+    }
+  }
+}
+layer {
+  name: "pool1"
+  type: "Pooling" # 池化层
+  bottom: "conv1"
+  top: "pool1"
+  pooling_param {
+    pool: MAX # 最大池化
+    kernel_size: 3 # 池化核大小
+    stride: 2 # 步长
+  }
+}
+layer {
+  name: "relu1"
+  type: "ReLU" # 激活函数relu
+  bottom: "pool1"
+  top: "pool1"
+}
+layer {
+  name: "norm1"
+  type: "LRN"
+  bottom: "pool1"
+  top: "norm1"
+  lrn_param {
+    local_size: 3
+    alpha: 5e-05
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
+  }
+}
+layer {
+  name: "conv2"
+  type: "Convolution"
+  bottom: "norm1"
+  top: "conv2"
+  param {
+    lr_mult: 1
+  }
+  param {
+    lr_mult: 2
+  }
+  convolution_param {
+    num_output: 32
+    pad: 2
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "relu2"
+  type: "ReLU"
+  bottom: "conv2"
+  top: "conv2"
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "conv2"
+  top: "pool2"
+  pooling_param {
+    pool: AVE
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "norm2"
+  type: "LRN"
+  bottom: "pool2"
+  top: "norm2"
+  lrn_param {
+    local_size: 3
+    alpha: 5e-05
+    beta: 0.75
+    norm_region: WITHIN_CHANNEL
+  }
+}
+layer {
+  name: "conv3"
+  type: "Convolution"
+  bottom: "norm2"
+  top: "conv3"
+  convolution_param {
+    num_output: 64
+    pad: 2
+    kernel_size: 5
+    stride: 1
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "relu3"
+  type: "ReLU"
+  bottom: "conv3"
+  top: "conv3"
+}
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "conv3"
+  top: "pool3"
+  pooling_param {
+    pool: AVE
+    kernel_size: 3
+    stride: 2
+  }
+}
+layer {
+  name: "ip1"
+  type: "InnerProduct" # 全连接层
+  bottom: "pool3"
+  top: "ip1"
+  param {
+    lr_mult: 1
+    decay_mult: 250
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 10
+    weight_filler {
+      type: "gaussian"
+      std: 0.01
+    }
+    bias_filler {
+      type: "constant"
+    }
+  }
+}
+layer {
+  name: "accuracy"
+  type: "Accuracy" # 测试输出准确率
+  bottom: "ip1"
+  bottom: "label"
+  top: "accuracy"
+  include {
+    phase: TEST
+  }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss" # 损失层
+  bottom: "ip1"
+  bottom: "label"
+  top: "loss"
+}
