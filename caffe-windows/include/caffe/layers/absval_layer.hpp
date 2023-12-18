@@ -11,7 +11,7 @@
 
 namespace caffe {
 
-/**
+/**用于求输入blob的绝对值作为输出blob
  * @brief Computes @f$ y = |x| @f$
  *
  * @param bottom input Blob vector (length 1)
@@ -22,23 +22,23 @@ namespace caffe {
  *      the computed outputs @f$ y = |x| @f$
  */
 template <typename Dtype>
-class AbsValLayer : public NeuronLayer<Dtype> {
- public:
+class AbsValLayer : public NeuronLayer<Dtype> {//类模板
+ public://公开的：类内与类外都可以访问的属性
   explicit AbsValLayer(const LayerParameter& param)
-      : NeuronLayer<Dtype>(param) {}
+      : NeuronLayer<Dtype>(param) {}//必须显示定义对象，禁用=
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);//虚函数：输入，输出
 
-  virtual inline const char* type() const { return "AbsVal"; }
-  virtual inline int ExactNumBottomBlobs() const { return 1; }
-  virtual inline int ExactNumTopBlobs() const { return 1; }
+  virtual inline const char* type() const { return "AbsVal"; }//返回层的类型
+  virtual inline int ExactNumBottomBlobs() const { return 1; }//输入层blob的数量
+  virtual inline int ExactNumTopBlobs() const { return 1; }//输出层blob的数量
 
- protected:
+ protected://受保护的属性：类内可以访问，子类可以访问
   /// @copydoc AbsValLayer
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);//前向传播
   virtual void Forward_gpu(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);//前向传播
 
   /**
    * @brief Computes the error gradient w.r.t. the absolute value inputs.

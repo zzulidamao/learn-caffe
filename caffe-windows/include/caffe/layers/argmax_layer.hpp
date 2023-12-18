@@ -9,7 +9,7 @@
 
 namespace caffe {
 
-/**
+/**求输出概率的最大索引位置
  * @brief Compute the index of the @f$ K @f$ max values for each datum across
  *        all dimensions @f$ (C \times H \times W) @f$.
  *
@@ -21,7 +21,7 @@ namespace caffe {
  * NOTE: does not implement Backwards operation.
  */
 template <typename Dtype>
-class ArgMaxLayer : public Layer<Dtype> {
+class ArgMaxLayer : public Layer<Dtype> {//类模板继承于Layer
  public:
   /**
    * @param param provides ArgMaxParameter argmax_param,
@@ -38,15 +38,15 @@ class ArgMaxLayer : public Layer<Dtype> {
   explicit ArgMaxLayer(const LayerParameter& param)
       : Layer<Dtype>(param) {}
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);//函数重载父类的
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);//函数重载父类的
 
   virtual inline const char* type() const { return "ArgMax"; }
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
- protected:
+ protected://类内可访问，子类可访问，类外不能访问，专为继承服务
   /**
    * @param bottom input Blob vector (length 1)
    *   -# @f$ (N \times C \times H \times W) @f$

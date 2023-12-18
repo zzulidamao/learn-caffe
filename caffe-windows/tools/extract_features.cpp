@@ -1,3 +1,16 @@
+/*该文件使用训练好的模型与输入数据得到中间推理的特征图并保存到本地硬盘*/
+/*
+extract_features \   //可执行的程序
+pretrained_net_param \ //预训练网络.caffemodel
+feature_extraction_proto_file \ //网络描述文件  .prototxt
+extract_feature_blob_name1 [, name2, ...] \   //需要提取的blob名（层输入输出名）
+save_feature_dataset_name1 [, name2, ...] \  //保存特征名
+num_mini_batches \  //做特征提取的数据批量数目
+db_type \ //输入的数据的格式，lmdb或者leveldb
+CPU/GPU \ //选择一何种模式运行，CPU模式或者GPU模式
+device_id=0   //如果使用GPU，则选择设备编号
+*/
+//参考：https://blog.csdn.net/seu_nuaa_zc/article/details/80549540
 #include <string>
 #include <vector>
 
@@ -20,7 +33,7 @@ using std::string;
 namespace db = caffe::db;
 
 template<typename Dtype>
-int feature_extraction_pipeline(int argc, char** argv);
+int feature_extraction_pipeline(int argc, char** argv);//函数模板声明
 
 int main(int argc, char** argv) {
   return feature_extraction_pipeline<float>(argc, argv);
@@ -28,8 +41,8 @@ int main(int argc, char** argv) {
 }
 
 template<typename Dtype>
-int feature_extraction_pipeline(int argc, char** argv) {
-  ::google::InitGoogleLogging(argv[0]);
+int feature_extraction_pipeline(int argc, char** argv) {//定义
+  ::google::InitGoogleLogging(argv[0]);//初始化日志
   const int num_required_args = 7;
   if (argc < num_required_args) {
     LOG(ERROR)<<
@@ -48,10 +61,10 @@ int feature_extraction_pipeline(int argc, char** argv) {
   int arg_pos = num_required_args;
 
   arg_pos = num_required_args;
-  if (argc > arg_pos && strcmp(argv[arg_pos], "GPU") == 0) {
+  if (argc > arg_pos && strcmp(argv[arg_pos], "GPU") == 0) {//比较arg_pos参数是否为GPU
     LOG(ERROR)<< "Using GPU";
     int device_id = 0;
-    if (argc > arg_pos + 1) {
+    if (argc > arg_pos + 1) {//指定GPU编号
       device_id = atoi(argv[arg_pos + 1]);
       CHECK_GE(device_id, 0);
     }
@@ -64,7 +77,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
   }
 
   arg_pos = 0;  // the name of the executable
-  std::string pretrained_binary_proto(argv[++arg_pos]);
+  std::string pretrained_binary_proto(argv[++arg_pos]);//第一个参数为模型名称，模型参数
 
   // Expected prototxt contains at least one data layer such as
   //  the layer data_layer_name and one feature blob such as the
@@ -93,34 +106,34 @@ int feature_extraction_pipeline(int argc, char** argv) {
      top: "fc7"
    }
    */
-  std::string feature_extraction_proto(argv[++arg_pos]);
+  std::string feature_extraction_proto(argv[++arg_pos]);//第二个参数为网络结构
   boost::shared_ptr<Net<Dtype> > feature_extraction_net(
-      new Net<Dtype>(feature_extraction_proto, caffe::TEST));
-  feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);
+      new Net<Dtype>(feature_extraction_proto, caffe::TEST));//定义网络为test
+  feature_extraction_net->CopyTrainedLayersFrom(pretrained_binary_proto);//使用训练好的模型初始化网络
 
-  std::string extract_feature_blob_names(argv[++arg_pos]);
+  std::string extract_feature_blob_names(argv[++arg_pos]);//blob的名称：用，隔开
   std::vector<std::string> blob_names;
   boost::split(blob_names, extract_feature_blob_names, boost::is_any_of(","));
 
-  std::string save_feature_dataset_names(argv[++arg_pos]);
+  std::string save_feature_dataset_names(argv[++arg_pos]);//保存特征名称，用，号隔开
   std::vector<std::string> dataset_names;
   boost::split(dataset_names, save_feature_dataset_names,
                boost::is_any_of(","));
   CHECK_EQ(blob_names.size(), dataset_names.size()) <<
-      " the number of blob names and dataset names must be equal";
+      " the number of blob names and dataset names must be equal";//blob的数量要与保存数据库的数量一致
   size_t num_features = blob_names.size();
 
-  for (size_t i = 0; i < num_features; i++) {
+  for (size_t i = 0; i < num_features; i++) {//判断网络结构中是否有该blob（名称）
     CHECK(feature_extraction_net->has_blob(blob_names[i]))
         << "Unknown feature blob name " << blob_names[i]
         << " in the network " << feature_extraction_proto;
   }
 
-  int num_mini_batches = atoi(argv[++arg_pos]);
+  int num_mini_batches = atoi(argv[++arg_pos]);//batch size的数量
 
   std::vector<boost::shared_ptr<db::DB> > feature_dbs;
   std::vector<boost::shared_ptr<db::Transaction> > txns;
-  const char* db_type = argv[++arg_pos];
+  const char* db_type = argv[++arg_pos];//数据库类型
   for (size_t i = 0; i < num_features; ++i) {
     LOG(INFO)<< "Opening dataset " << dataset_names[i];
     boost::shared_ptr<db::DB> db(db::GetDB(db_type));
@@ -131,16 +144,17 @@ int feature_extraction_pipeline(int argc, char** argv) {
   }
 
   LOG(ERROR)<< "Extracting Features";
-
+  //例子：对第一个卷积层进行可视化，第一个卷积层"conv1"的维度信息是96*3*11*11，即96个卷积核，每个卷积核是3通道的，每个卷积核尺寸为11*11    
+  //故该卷积层有96个图，每个图是11*11的三通道BGR图像
   Datum datum;
   std::vector<int> image_indices(num_features, 0);
-  for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {
-    feature_extraction_net->Forward();
-    for (int i = 0; i < num_features; ++i) {
+  for (int batch_index = 0; batch_index < num_mini_batches; ++batch_index) {//外层循环batch size
+    feature_extraction_net->Forward();//前向传播：得到每一层的特征
+    for (int i = 0; i < num_features; ++i) {//需要提取的特征数量
       const boost::shared_ptr<Blob<Dtype> > feature_blob =
-        feature_extraction_net->blob_by_name(blob_names[i]);
-      int batch_size = feature_blob->num();
-      int dim_features = feature_blob->count() / batch_size;
+        feature_extraction_net->blob_by_name(blob_names[i]);//通过名称在传播之后的网络中得到特征blob
+      int batch_size = feature_blob->num();//blob的bs?
+      int dim_features = feature_blob->count() / batch_size;//每个图的特征维度
       const Dtype* feature_blob_data;
       for (int n = 0; n < batch_size; ++n) {
         datum.set_height(feature_blob->height());
@@ -149,7 +163,7 @@ int feature_extraction_pipeline(int argc, char** argv) {
         datum.clear_data();
         datum.clear_float_data();
         feature_blob_data = feature_blob->cpu_data() +
-            feature_blob->offset(n);
+            feature_blob->offset(n);//btch中相对大格中的位置+所在的大格位置
         for (int d = 0; d < dim_features; ++d) {
           datum.add_float_data(feature_blob_data[d]);
         }

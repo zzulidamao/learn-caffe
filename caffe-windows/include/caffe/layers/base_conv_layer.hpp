@@ -10,20 +10,20 @@
 
 namespace caffe {
 
-/**
+/**使用blas实现函数卷积操作
  * @brief Abstract base class that factors out the BLAS code common to
  *        ConvolutionLayer and DeconvolutionLayer.
  */
 	//类模板
 template <typename Dtype>
-class BaseConvolutionLayer : public Layer<Dtype> {//继承基类Layer
- public:
+class BaseConvolutionLayer : public Layer<Dtype> {//基础·卷积层继承基类Layer
+ public://公共属性：类内可访问，类外可访问
   explicit BaseConvolutionLayer(const LayerParameter& param)
-      : Layer<Dtype>(param) {}
+      : Layer<Dtype>(param) {}//显示声明对象
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);//重载父类函数
   virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
-      const vector<Blob<Dtype>*>& top);
+      const vector<Blob<Dtype>*>& top);//重载父类函数
 
   virtual inline int MinBottomBlobs() const { return 1; }
   virtual inline int MinTopBlobs() const { return 1; }

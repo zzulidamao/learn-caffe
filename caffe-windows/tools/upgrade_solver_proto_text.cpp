@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  SolverParameter solver_param;
+  SolverParameter solver_param;//优化文件
   string input_filename(argv[1]);
   if (!ReadProtoFromTextFile(input_filename, &solver_param)) {
     LOG(ERROR) << "Failed to parse input text file as SolverParameter: "

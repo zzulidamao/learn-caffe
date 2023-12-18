@@ -18,7 +18,7 @@ namespace caffe {
  * TODO(dox): thorough documentation for Forward and proto params.
  */
 template <typename Dtype>
-class BaseDataLayer : public Layer<Dtype> {
+class BaseDataLayer : public Layer<Dtype> {//Êý¾Ý²ã
  public:
   explicit BaseDataLayer(const LayerParameter& param);
   // LayerSetUp: implements common data layer setup functionality, and calls

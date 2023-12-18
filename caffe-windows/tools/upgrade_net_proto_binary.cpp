@@ -1,7 +1,7 @@
 // This is a script to upgrade "V0" network prototxts to the new format.
 // Usage:
 //    upgrade_net_proto_binary v0_net_proto_file_in net_proto_file_out
-
+//用于更新老版本的模型参数到新版本的caffe
 #include <cstring>
 #include <fstream>  // NOLINT(readability/streams)
 #include <iostream>  // NOLINT(readability/streams)
@@ -25,8 +25,8 @@ int main(int argc, char** argv) {
   }
 
   NetParameter net_param;
-  string input_filename(argv[1]);
-  if (!ReadProtoFromBinaryFile(input_filename, &net_param)) {
+  string input_filename(argv[1]);//模型参数
+  if (!ReadProtoFromBinaryFile(input_filename, &net_param)) {//把参数读到net_param对象
     LOG(ERROR) << "Failed to parse input binary file as NetParameter: "
                << input_filename;
     return 2;
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
   bool need_upgrade = NetNeedsUpgrade(net_param);
   bool success = true;
   if (need_upgrade) {
-    success = UpgradeNetAsNeeded(input_filename, &net_param);
+    success = UpgradeNetAsNeeded(input_filename, &net_param);//就地操作
     if (!success) {
       LOG(ERROR) << "Encountered error(s) while upgrading prototxt; "
                  << "see details above.";

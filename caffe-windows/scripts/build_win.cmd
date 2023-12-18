@@ -154,7 +154,7 @@ if !RUN_TESTS! EQU 1 (
     )
 )
 if NOT EXIST build_cpu mkdir build_cpu
-pushd build_cpu
+pushd build
 
 :: Setup the environement for VS x64
 set batch_file=!VS%MSVC_VERSION%0COMNTOOLS!..\..\VC\vcvarsall.bat

@@ -11,7 +11,7 @@
 
 namespace caffe {
 
-/**
+/**计算分类的准确率层
  * @brief Computes the classification accuracy for a one-of-many
  *        classification task.
  */
